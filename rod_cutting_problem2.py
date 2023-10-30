@@ -1,9 +1,9 @@
-# Reads input file and returns final_array with width and height of wood board, along with board cuts you can do
+# Reads input file and returns FinalArray with Width and Height of wood board, along with board cuts you can do
 def parse_input():
 
-    # Instantiate final_array to store and return
-    board_cuts = []
-    final_array = []
+    # Instantiate FinalArray to store and return
+    BoardCuts = []
+    FinalArray = []
 
     # Reads text file input and stores in lines
     with open('input2.txt' , 'r' ) as file:
@@ -12,52 +12,102 @@ def parse_input():
     # Loop through lines and skip over every 2
     for i in range(0 , len(lines) , 2):
 
-        # Store width and height from first line of the wood board
+        # Store Width and Height from first line of the wood board
         # Must use Map to convert to ints since lines[i] is returned as a list
-        width, height = map(int, lines[i].strip().split())
+        Width, Height = map(int, lines[i].strip().split())
 
-        # Instantiate board_cuts to store cuts as int values
-        board_cuts = []
+        # Instantiate BoardCuts to store cuts as int values
+        BoardCuts = []
 
         # Store the cut locations that can be used to cut the wood board
         # Strip off left and right brackets and split based on "],"
-        board_cuts_str = lines[i+1].strip()[1:-1]
-        board_cuts_str = board_cuts_str.split("],")
+        BoardCutString = lines[i+1].strip()[1:-1]
+        BoardCutString = BoardCutString.split("],")
 
-        # Splits x and y values and stores as ints
+        # Splits x and y values and stores as a paired list of ints
         # Covers 2 cases:
         #     Case 1: No trailing ] - This case happens if it is not the last cut in the string
         #     Case 2: Trailing ] - This case happens if it is the last cut in the string
-        for cut in board_cuts_str:
+        for cut in BoardCutString:
             if "]" not in cut:
-                board_cuts.append(list(map(int, cut[1:].split(","))))
+                BoardCuts.append(list(map(int, cut[1:].split(","))))
             else:
-                board_cuts.append(list(map(int, cut[1:-1].split(","))))
+                BoardCuts.append(list(map(int, cut[1:-1].split(","))))
         
-        # Store board width, height, and board cuts in data and append to final_array
-        data = [width, height, board_cuts]
-        final_array.append(data)
+        # Store board Width, Height, and board cuts in data and append to FinalArray
+        data = [Width, Height, BoardCuts]
+        FinalArray.append(data)
 
-    # Return final_array with board width, height, and possible board cuts
-    return final_array
+    # Return FinalArray with board Width, Height, and possible board cuts
+    return FinalArray
 
 
 
 # board_cutting() Function
-# Inputs: Width of wood board, Height of wood board, X and Y values as list of board cuts
+# Inputs: Width and Height of wood board in Boards, X and Y values as list of board cuts
 # Returns: Total min value of cuts cost, Optimal order cuts take place
-def board_cutting(width, height, board_cuts):
+def board_cutting(Boards, BoardCuts, MemoizedDictionary):
+    # Boards = sorted(Boards, key=lambda x: x[0] * x[1], reverse=True)
+
+    key = (tuple(tuple(Board) for Board in Boards), tuple(sorted(tuple(Cut) for Cut in BoardCuts)))
+
+    # If key is already stored in Memoized Dict then return key or
+    # If no board cuts return some hardcoded default values
+    if key in MemoizedDictionary:
+        return MemoizedDictionary[key]
+    if not BoardCuts:
+        return 0, []
+    
+    # Define MinCost as some very low number and Instantiate OptimalOrder to store cut order
+    MinCost = 99999
+    OptimalOrder = []
+
+    # print("Sorted Boards:", Boards)
+
+    for i, (Width, Height) in enumerate(Boards):
+        for x, y in BoardCuts:
+            if x < Width and y < Height:
+
+                # print("Before cut, Boards:", Boards)
+                # print("Cutting at:", [x, y])
+
+                # Cost of initial board segment
+                Cost = 2 * Width * Height
+
+                # print("Cost for this cut:", Cost)
+
+                NewBoards = Boards[:i] + Boards[i+1:]
+                NewBoards.extend([[Width - x, y], [x, Height - y], [Width - x, Height - y], [x, y]])
+
+                NewBoardCuts = BoardCuts.copy()
+                NewBoardCuts.remove([x, y])
+
+                # print("Calling recursively with Boards:", NewBoards)
+                # print("And remaining cuts:", NewBoardCuts)
+
+                RemainingCost, RemainingOrder = board_cutting(NewBoards, NewBoardCuts, MemoizedDictionary)
+
+                # print("Returned cost and order:", RemainingCost, RemainingOrder)
+
+                TotalCost = Cost + RemainingCost
+                if TotalCost < MinCost:
+                    MinCost = TotalCost
+                    OptimalOrder = [[x, y]] + RemainingOrder
+
+    MemoizedDictionary[key] = (MinCost, OptimalOrder)
+    return MinCost, OptimalOrder
 
 
-    return 0, 0
 
 # --- Main starts here ---
-# Call parse_input() function and store results in final_array
-# final_array example will look like: [width, height, [[cut_x1, cut_y1], [cut_x2, cut_y2], ...]]
-final_array = parse_input()
-print(final_array)
+# Call parse_input() function and store results in FinalArray
+# FinalArray example will look like: [Width, Height, [[cut_x1, cut_y1], [cut_x2, cut_y2], ...]]
+FinalArray = parse_input()
+print(FinalArray)
 
-# Once you have the final array , you need to run rod_cutting_dp on each value and run it
-for values in final_array:
-    min_cost, board_cut_order = board_cutting(values[0], values[1], values[2])
-    print("The minimum total cost is " + str(min_cost) + ". The optimal order of the cuts is " + str(board_cut_order) + ".")
+# Once you have the final array , you need to run board_cutting to find min cost and main order to cut the board
+# Instantiate a memoized dictionary to hold all 
+for Width, Height, CutPoints in FinalArray:
+    MemoizedDictionary = {}
+    MinimumCost, BoardCutOrder = board_cutting([[Width, Height]], CutPoints, MemoizedDictionary)
+    print("The minimum total cost is " + str(MinimumCost) + ". The optimal order of the cuts is " + str(BoardCutOrder) + ".")
