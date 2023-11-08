@@ -70,16 +70,17 @@ def board_cutting(Boards, BoardCuts, MemoizedDictionary):
             XCut = XStart + x
             YCut = YStart + y
 
-            if XStart <= XCut < XStart + Width and YStart <= YCut < YStart + Height:
+            # if XStart <= XCut < XStart + Width and YStart <= YCut < YStart + Height:
+            if XStart <= XCut < Width and YStart <= YCut < Height: # <---- Adding this gets 2 of them right
 
                 # print("Before cut, Boards:", Boards)
                 # print("Cutting at:", [x, y])
 
                 # Cost of this specific board cut
-                # Cost = 2 * Width * Height
-                Cost = 2 * Width * Height
+                Cost = 2 * Width * Height # <----- Adding this gets 2 of them right
+                # Cost = 2 * (Width - XStart) * (Height - YStart) # <----- Adding this gets 2 of them right
 
-                # print("Cost for this cut:", Cost)
+                print("Cost for this cut:", Cost)
 
                 # Remove the board that is being cut from the list
                 # Add the four new boards that result from the cut
@@ -115,8 +116,9 @@ def board_cutting(Boards, BoardCuts, MemoizedDictionary):
                 # print("Returned cost and order:", RemainingCost, RemainingOrder)
 
                 TotalCost = Cost + RemainingCost
+                print("Total Cost: ", TotalCost)
                 if TotalCost < MinCost:
-                    print("This cost was added: ", MinCost)
+                    # print("This cost was added: ", MinCost)
                     MinCost = TotalCost
                     OptimalOrder = [[x, y]] + RemainingOrder
 
