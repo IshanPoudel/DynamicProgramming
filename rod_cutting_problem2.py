@@ -49,7 +49,7 @@ def parse_input():
 def board_cutting(Boards, BoardCuts, MemoizedDictionary):
     # Boards = sorted(Boards, key=lambda x: x[0] * x[1], reverse=True)
 
-    key = (tuple(tuple(Board) for Board in Boards), tuple(sorted(tuple(Cut) for Cut in BoardCuts)))
+    key = (tuple(tuple(Board) for Board in Boards), tuple(tuple(Cut) for Cut in BoardCuts))
 
     # If key is already stored in Memoized Dict then return key or
     # If no board cuts return some hardcoded default values
@@ -57,28 +57,53 @@ def board_cutting(Boards, BoardCuts, MemoizedDictionary):
         return MemoizedDictionary[key]
     if not BoardCuts:
         return 0, []
-    
-    # Define MinCost as some very low number and Instantiate OptimalOrder to store cut order
+
+    # Define MinCost as some high number and Instantiate OptimalOrder to store cut order
     MinCost = 99999
     OptimalOrder = []
 
     # print("Sorted Boards:", Boards)
 
-    for i, (Width, Height) in enumerate(Boards):
+    for i, (XStart, YStart, Width, Height) in enumerate(Boards):
         for x, y in BoardCuts:
-            if x < Width and y < Height:
+            # XCut and YCut used for positional values for new board coordinates
+            XCut = XStart + x
+            YCut = YStart + y
+
+            if XStart <= XCut < XStart + Width and YStart <= YCut < YStart + Height:
 
                 # print("Before cut, Boards:", Boards)
                 # print("Cutting at:", [x, y])
 
-                # Cost of initial board segment
+                # Cost of this specific board cut
+                # Cost = 2 * Width * Height
                 Cost = 2 * Width * Height
 
                 # print("Cost for this cut:", Cost)
 
-                NewBoards = Boards[:i] + Boards[i+1:]
-                NewBoards.extend([[Width - x, y], [x, Height - y], [Width - x, Height - y], [x, y]])
+                # Remove the board that is being cut from the list
+                # Add the four new boards that result from the cut
 
+                # 
+                # Height___________________________
+                # |                                |
+                # |                                |
+                # |                                |
+                # |                                |
+                # |                                |
+                # |              _|_               |
+                # |               |(XCut, YCut)    |
+                # |                                |
+                # |                                |
+                # |________________________________|Width
+                # (XStart, YStart)
+                NewBoards = Boards[:i] + Boards[i+1:]
+                NewBoards.extend([[XStart, YStart, x, y],               # Top Left
+                                  [XCut, YStart, Width - x, y],         # Top Right
+                                  [XStart, YCut, x, Height - y],        # Bottom Left
+                                  [XCut, YCut, Width - x, Height - y]]) # Bottom Right
+
+                # Remove the cut that was just made
                 NewBoardCuts = BoardCuts.copy()
                 NewBoardCuts.remove([x, y])
 
@@ -91,6 +116,7 @@ def board_cutting(Boards, BoardCuts, MemoizedDictionary):
 
                 TotalCost = Cost + RemainingCost
                 if TotalCost < MinCost:
+                    print("This cost was added: ", MinCost)
                     MinCost = TotalCost
                     OptimalOrder = [[x, y]] + RemainingOrder
 
@@ -109,5 +135,5 @@ print(FinalArray)
 # Instantiate a memoized dictionary to hold all 
 for Width, Height, CutPoints in FinalArray:
     MemoizedDictionary = {}
-    MinimumCost, BoardCutOrder = board_cutting([[Width, Height]], CutPoints, MemoizedDictionary)
+    MinimumCost, BoardCutOrder = board_cutting([[0, 0, Width, Height]], CutPoints, MemoizedDictionary)
     print("The minimum total cost is " + str(MinimumCost) + ". The optimal order of the cuts is " + str(BoardCutOrder) + ".")
