@@ -24,12 +24,9 @@ def parse_input():
         BoardCutString = lines[i+1].strip()[1:-1]
         BoardCutString = BoardCutString.split("],")
         
-
         #The arrays in BoardCutString may have a leading space (depending on the input). Need to remove that
         BoardCutString = [s.lstrip() for s in BoardCutString]
         print(f"{BoardCutString}")
-
-
 
         #The arrays in BoardCutString may have a leading space (depending on the input). Need to remove that
         BoardCutString = [s.lstrip() for s in BoardCutString]
