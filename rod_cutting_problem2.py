@@ -24,6 +24,9 @@ def parse_input():
         BoardCutString = lines[i+1].strip()[1:-1]
         BoardCutString = BoardCutString.split("],")
 
+        #The arrays in BoardCutString may have a leading space (depending on the input). Need to remove that
+        BoardCutString = [s.lstrip() for s in BoardCutString]
+
         # Splits x and y values and stores as a paired list of ints
         # Covers 2 cases:
         #     Case 1: No trailing ] - This case happens if it is not the last cut in the string
@@ -47,7 +50,6 @@ def parse_input():
 # Inputs: Width and Height of wood board in Boards, X and Y values as list of board cuts
 # Returns: Total min value of cuts cost, Optimal order cuts take place
 def board_cutting(Boards, BoardCuts, MemoizedDictionary):
-    # Boards = sorted(Boards, key=lambda x: x[0] * x[1], reverse=True)
 
     key = (tuple(tuple(Board) for Board in Boards), tuple(tuple(Cut) for Cut in BoardCuts))
 
@@ -62,30 +64,22 @@ def board_cutting(Boards, BoardCuts, MemoizedDictionary):
     MinCost = 99999
     OptimalOrder = []
 
-    # print("Sorted Boards:", Boards)
-
+    # Loop through all boards stored in the Boards parameter
+    # Begining will be 1 and increase based on cuts: (n * 4 - 1) Boards
     for i, (XStart, YStart, Width, Height) in enumerate(Boards):
+
+        # Loop through each cut and find the board associated with that cut if multiple boards exist
         for x, y in BoardCuts:
-            # XCut and YCut used for positional values for new board coordinates
-            XCut = XStart + x
-            YCut = YStart + y
 
-            # if XStart <= XCut < XStart + Width and YStart <= YCut < YStart + Height:
-            if XStart <= XCut < Width and YStart <= YCut < Height: # <---- Adding this gets 2 of them right
-
-                # print("Before cut, Boards:", Boards)
-                # print("Cutting at:", [x, y])
+            # Check if x and y are within bounds of the current board being cut
+            if XStart <= x < XStart + Width and YStart <= y < YStart + Height:
 
                 # Cost of this specific board cut
-                Cost = 2 * Width * Height # <----- Adding this gets 2 of them right
-                # Cost = 2 * (Width - XStart) * (Height - YStart) # <----- Adding this gets 2 of them right
-
-                print("Cost for this cut:", Cost)
+                Cost = 2 * (Width * Height)
 
                 # Remove the board that is being cut from the list
                 # Add the four new boards that result from the cut
-
-                # 
+                # Example of the coordiantes of the board
                 # Height___________________________
                 # |                                |
                 # |                                |
@@ -93,35 +87,33 @@ def board_cutting(Boards, BoardCuts, MemoizedDictionary):
                 # |                                |
                 # |                                |
                 # |              _|_               |
-                # |               |(XCut, YCut)    |
+                # |               |(X, Y)          |
                 # |                                |
                 # |                                |
                 # |________________________________|Width
                 # (XStart, YStart)
                 NewBoards = Boards[:i] + Boards[i+1:]
-                NewBoards.extend([[XStart, YStart, x, y],               # Top Left
-                                  [XCut, YStart, Width - x, y],         # Top Right
-                                  [XStart, YCut, x, Height - y],        # Bottom Left
-                                  [XCut, YCut, Width - x, Height - y]]) # Bottom Right
+                NewBoards.extend([[XStart, YStart, x, y],           # Top Left
+                                  [x, YStart, Width - x, y],        # Top Right
+                                  [XStart, y, x, Height - y],       # Bottom Left
+                                  [x, y, Width - x, Height - y]])   # Bottom Right
 
                 # Remove the cut that was just made
                 NewBoardCuts = BoardCuts.copy()
                 NewBoardCuts.remove([x, y])
 
-                # print("Calling recursively with Boards:", NewBoards)
-                # print("And remaining cuts:", NewBoardCuts)
-
+                # Calculate next remaining cost and order by recursively calling board_cutting with new parameters
                 RemainingCost, RemainingOrder = board_cutting(NewBoards, NewBoardCuts, MemoizedDictionary)
 
-                # print("Returned cost and order:", RemainingCost, RemainingOrder)
-
+                # Store new total cost and compare to current minimum cost
                 TotalCost = Cost + RemainingCost
-                print("Total Cost: ", TotalCost)
                 if TotalCost < MinCost:
-                    # print("This cost was added: ", MinCost)
+                    
+                    # Replace MinCost with TotalCost and append new cut to OptimalOrder
                     MinCost = TotalCost
                     OptimalOrder = [[x, y]] + RemainingOrder
 
+    # Add new entry into Memoized Dictionary file and return the minimum cost and optimal order of cuts
     MemoizedDictionary[key] = (MinCost, OptimalOrder)
     return MinCost, OptimalOrder
 
