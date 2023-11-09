@@ -26,10 +26,6 @@ def parse_input():
         
         #The arrays in BoardCutString may have a leading space (depending on the input). Need to remove that
         BoardCutString = [s.lstrip() for s in BoardCutString]
-        print(f"{BoardCutString}")
-
-        #The arrays in BoardCutString may have a leading space (depending on the input). Need to remove that
-        BoardCutString = [s.lstrip() for s in BoardCutString]
 
         # Splits x and y values and stores as a paired list of ints
         # Covers 2 cases:
