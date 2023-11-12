@@ -1,3 +1,5 @@
+import time
+
 # Reads input file and returns FinalArray with Width and Height of wood board, along with board cuts you can do
 def parse_input():
 
@@ -51,7 +53,7 @@ def parse_input():
 # Returns: Total min value of cuts cost, Optimal order cuts take place
 def board_cutting(Boards, BoardCuts, MemoizedDictionary):
 
-    key = (tuple(tuple(Board) for Board in Boards), tuple(tuple(Cut) for Cut in BoardCuts))
+    key = (tuple(tuple(Board) for Board in sorted(Boards)), tuple(tuple(Cut) for Cut in sorted(BoardCuts)))
 
     # If key is already stored in Memoized Dict then return key or
     # If no board cuts return some hardcoded default values
@@ -93,10 +95,10 @@ def board_cutting(Boards, BoardCuts, MemoizedDictionary):
                 # |________________________________|Width
                 # (XStart, YStart)
                 NewBoards = Boards[:i] + Boards[i+1:]
-                NewBoards.extend([[XStart, YStart, x, y],           # Top Left
-                                  [x, YStart, Width - x, y],        # Top Right
-                                  [XStart, y, x, Height - y],       # Bottom Left
-                                  [x, y, Width - x, Height - y]])   # Bottom Right
+                NewBoards.append((XStart, YStart, x, y))        # Top Left
+                NewBoards.append((x, YStart, Width - x, y))     # Top Right
+                NewBoards.append((XStart, y, x, Height - y))    # Bottom Left
+                NewBoards.append((x, y, Width - x, Height - y)) # Bottom Right
 
                 # Remove the cut that was just made
                 NewBoardCuts = BoardCuts.copy()
@@ -108,10 +110,10 @@ def board_cutting(Boards, BoardCuts, MemoizedDictionary):
                 # Store new total cost and compare to current minimum cost
                 TotalCost = Cost + RemainingCost
                 if TotalCost < MinCost:
-                    
                     # Replace MinCost with TotalCost and append new cut to OptimalOrder
                     MinCost = TotalCost
                     OptimalOrder = [[x, y]] + RemainingOrder
+
 
     # Add new entry into Memoized Dictionary file and return the minimum cost and optimal order of cuts
     MemoizedDictionary[key] = (MinCost, OptimalOrder)
@@ -122,8 +124,10 @@ def board_cutting(Boards, BoardCuts, MemoizedDictionary):
 # --- Main starts here ---
 # Call parse_input() function and store results in FinalArray
 # FinalArray example will look like: [Width, Height, [[cut_x1, cut_y1], [cut_x2, cut_y2], ...]]
+# StartTime = time.perf_counter()
+# print("Start Time: ", StartTime)
+
 FinalArray = parse_input()
-print(FinalArray)
 
 # Once you have the final array , you need to run board_cutting to find min cost and main order to cut the board
 # Instantiate a memoized dictionary to hold all 
@@ -131,3 +135,7 @@ for Width, Height, CutPoints in FinalArray:
     MemoizedDictionary = {}
     MinimumCost, BoardCutOrder = board_cutting([[0, 0, Width, Height]], CutPoints, MemoizedDictionary)
     print("The minimum total cost is " + str(MinimumCost) + ". The optimal order of the cuts is " + str(BoardCutOrder) + ".")
+
+# EndTime = time.perf_counter()
+# print("End Time: ", EndTime)
+# print("Elapsed Time: ", EndTime - StartTime)
